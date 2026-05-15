@@ -72,25 +72,12 @@ const StoriesComponent = () => {
   return (
     <div className="bg-gradient-to-br animate-gradient-slow min-h-screen">
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-6 flex justify-between">
+        <div className="py-6 flex justify-between items-start">
           <Link to="/">
             <div className="!rounded-button bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-gray-300 px-3 py-2 flex items-center gap-2 transition-all duration-300 rounded">
               <i className="fa-solid fa-left-long"></i> BACK
             </div>
           </Link>
-          {!login && (
-            <div className="!rounded-button bg-gradient-to-r from-white/20 to-white/10 text-gray-400 px-3 py-2 flex items-center gap-2 transition-all duration-300 rounded text-sm">
-              Free access for 3 requests —{" "}
-              <Link to="/login">
-                {""}
-                <span className="text-indigo-400 underline font-semibold">
-                  Login
-                </span>{" "}
-              </Link>
-              {""}
-              for more!
-            </div>
-          )}
           <div className="">
             <button className="mt-1 !rounded-button bg-gradient-to-r from-white/20 to-white/10 hover:from-white/30 hover:to-white/20 text-gray-300 px-3 py-2 flex items-center gap-2 transition-all duration-300 rounded">
               <span>
@@ -113,8 +100,24 @@ const StoriesComponent = () => {
           </div>
         </div>
 
-        <div className="mt-11">
-          <h1 className="text-gray-300 text-4xl font-extrabold text-center mb-12 leading-snug drop-shadow-lg tracking-wide">
+        {!login && (
+          <div className="flex justify-center mb-4">
+            <div className="!rounded-button bg-gradient-to-r from-white/20 to-white/10 text-gray-400 px-3 py-2 flex items-center gap-1 transition-all duration-300 rounded text-sm">
+              Free access for 3 requests —{" "}
+              <Link to="/login">
+                {""}
+                <span className="text-indigo-400 underline font-semibold">
+                  Login
+                </span>{" "}
+              </Link>
+              {""}
+              for more!
+            </div>
+          </div>
+        )}
+
+        <div className="mt-2 sm:mt-4">
+         <h1 className="text-gray-300 text-4xl font-extrabold text-center mb-4 leading-snug drop-shadow-lg tracking-wide">
             ✨ Enter Prompt –{" "}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-blue-400">
               Generate Story Today!
