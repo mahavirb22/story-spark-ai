@@ -52,41 +52,60 @@ export default function CollabRoom() {
 
       // Connect to collab namespace
       const collabSocket = socket.io.of("/collab");
+      const syncRoom = () => {
+        collabSocket.emit("collab:join_room", { roomId });
+      };
 
-      // Request room info
-      collabSocket.emit("collab:get_room", { roomId }, (response: any) => {
+      const handleJoined = (response: { room?: Room }) => {
         if (response && response.room) {
           setRoom(response.room);
           setError(null);
-        } else {
-          setError("Room not found");
+          setLoading(false);
+          return;
         }
-        setLoading(false);
-      });
 
-      // Listen for room updates
-      const handleRoomUpdated = (data: any) => {
+        setError("Room not found");
+        setLoading(false);
+      };
+
+      const handleConnect = () => {
+        syncRoom();
+      };
+
+      const handleRoomUpdated = (data: { room?: Room }) => {
         if (data && data.room) {
           setRoom(data.room);
         }
       };
 
-      const handleStoryUpdated = (data: any) => {
-        if (data && data.story) {
-          setRoom((prev) => (prev ? { ...prev, story: data.story } : null));
+      const handleStoryUpdated = (data: { story?: StoryChunk[] }) => {
+        const story = data?.story;
+        if (story) {
+          setRoom((prev) => (prev ? { ...prev, story } : null));
         }
       };
 
+      const handleError = (data: { message?: string }) => {
+        setError(data.message || "Failed to sync collaboration room");
+        setLoading(false);
+      };
+
+      collabSocket.on("connect", handleConnect);
+      collabSocket.on("collab:joined", handleJoined);
       collabSocket.on("collab:room_updated", handleRoomUpdated);
       collabSocket.on("collab:story_updated", handleStoryUpdated);
-      collabSocket.on("collab:error", (data: any) => {
-        setError(data.message);
-        setLoading(false);
-      });
+      collabSocket.on("collab:error", handleError);
+
+      if (socket.connected) {
+        syncRoom();
+      }
 
       return () => {
+        collabSocket.off("connect", handleConnect);
+        collabSocket.off("collab:joined", handleJoined);
         collabSocket.off("collab:room_updated", handleRoomUpdated);
         collabSocket.off("collab:story_updated", handleStoryUpdated);
+        collabSocket.off("collab:error", handleError);
       };
     } catch (err) {
       console.error("Collab error:", err);
