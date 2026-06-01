@@ -37,6 +37,28 @@ const ExploreViewListComponent: React.FC<IExploreViewListComponentProps> = ({
     return Math.max(1, Math.ceil(words / 200));
   };
 
+  const getStoryPreview = (content: string) => {
+    if (!content) return "No preview available for this story yet.";
+    const normalizedContent = content.replace(/\s+/g, " ").trim();
+    return normalizedContent.length > 180
+      ? `${normalizedContent.slice(0, 180)}...`
+      : normalizedContent;
+  };
+
+  const openStory = (storyId: string) => {
+    navigate(`/post/${storyId}`);
+  };
+
+  const handleCardKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    storyId: string
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openStory(storyId);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
@@ -74,98 +96,122 @@ const ExploreViewListComponent: React.FC<IExploreViewListComponentProps> = ({
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
         {posts.length > 0 ? (
-          posts.map((story) => (
-            <div
-              key={story._id}
-              onClick={() => navigate(`/post/${story._id}`)}
-              className="cursor-pointer bg-gray-50 text-slate-900 backdrop-blur-xl border border-gray-200 rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-300 overflow-hidden group flex flex-col h-full dark:bg-slate-900/60 dark:text-white dark:border-slate-800"
-            >
-              <div className="relative overflow-hidden bg-slate-200 dark:bg-slate-800">
-                {!imageErrors[story._id] && story.imageURL ? (
-                  <img
-                    src={story.imageURL}
-                    alt={`Cover image for ${story.title}`}
-                    onError={() => handleImageError(story._id)}
-                    className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                  />
-                ) : (
-                  <div className="w-full h-52 bg-gradient-to-br from-indigo-500/25 via-purple-500/25 to-blue-500/25 flex items-center justify-center relative">
-                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm" />
-                    <i className="fas fa-book-open text-4xl text-indigo-400/80 relative z-10 animate-pulse" />
-                  </div>
-                )}
+          posts.map((story) => {
+            const publishedDate = formatDate(story.publishedAt || story.createdAt);
+            const readingTime = calculateReadingTime(story.content);
+            const preview = getStoryPreview(story.content);
 
-                <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-transparent opacity-100 pointer-events-none dark:from-slate-900/90 dark:via-transparent dark:to-transparent"></div>
+            return (
+              <div
+                key={story._id}
+                role="button"
+                tabIndex={0}
+                onClick={() => openStory(story._id)}
+                onKeyDown={(event) => handleCardKeyDown(event, story._id)}
+                className="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white/80 text-slate-900 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-2 hover:border-indigo-300/70 hover:bg-white/95 hover:shadow-[0_28px_80px_rgba(79,70,229,0.18)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500 dark:border-white/10 dark:bg-slate-950/55 dark:text-white dark:shadow-[0_18px_60px_rgba(0,0,0,0.32)] dark:hover:border-indigo-400/40 dark:hover:bg-slate-900/75"
+              >
+                <div className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/70 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
-                <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-                  <BookmarkButton
-                    storyId={story._id}
-                    className="backdrop-blur-md bg-white/10 dark:bg-black/20 border border-white/20 hover:bg-white/30 p-2 !rounded-full shadow-lg hover:scale-110 transition-all duration-300"
-                  />
-                </div>
-
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="px-3 py-1 bg-indigo-600 border border-indigo-500/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg">
-                    {story.tag}
-                  </span>
-                  {story.language && (
-                    <span className="px-3 py-1 bg-purple-600 border border-purple-500/50 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-lg">
-                      {story.language}
-                    </span>
+                <div className="relative m-3 overflow-hidden rounded-2xl bg-slate-200 dark:bg-slate-800">
+                  {!imageErrors[story._id] && story.imageURL ? (
+                    <img
+                      src={story.imageURL}
+                      alt={`Cover image for ${story.title}`}
+                      onError={() => handleImageError(story._id)}
+                      className="h-52 w-full object-cover transition duration-700 ease-out group-hover:scale-105 group-hover:saturate-125"
+                    />
+                  ) : (
+                    <div className="relative flex h-52 w-full items-center justify-center overflow-hidden bg-gradient-to-br from-indigo-500/20 via-sky-500/20 to-fuchsia-500/20">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.45),transparent_28%),linear-gradient(135deg,rgba(15,23,42,0.15),rgba(79,70,229,0.2))] dark:bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12),transparent_28%),linear-gradient(135deg,rgba(15,23,42,0.9),rgba(79,70,229,0.28))]" />
+                      <i className="fas fa-book-open relative z-10 text-4xl text-indigo-500/80 dark:text-indigo-300/80" />
+                    </div>
                   )}
+
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/75 via-slate-950/10 to-transparent opacity-80 transition-opacity duration-300 group-hover:opacity-95" />
+
+                  <div className="absolute left-4 top-4 flex max-w-[calc(100%-5rem)] flex-wrap gap-2">
+                    <span className="rounded-full border border-white/30 bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-md">
+                      {story.tag || "Story"}
+                    </span>
+                    {story.language && (
+                      <span className="rounded-full border border-white/30 bg-slate-950/25 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg backdrop-blur-md">
+                        {story.language}
+                      </span>
+                    )}
+                  </div>
+
+                  <div
+                    className="absolute right-4 top-4 z-10"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <BookmarkButton
+                      storyId={story._id}
+                      className="!rounded-full border border-white/25 bg-white/20 p-2 shadow-lg backdrop-blur-md transition-all duration-300 hover:scale-110 hover:bg-white/35 dark:bg-black/25"
+                    />
+                  </div>
+
+                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 text-white">
+                    <span className="rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-md">
+                      {readingTime} min read
+                    </span>
+                    <span className="truncate text-xs font-medium text-white/80">
+                      {publishedDate || "Recently published"}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="px-6 py-5 flex-1 flex flex-col relative z-10">
-                <h3 className="font-extrabold text-xl mb-3 text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-2 dark:text-white dark:group-hover:text-indigo-400">
-                  {story.title}
-                </h3>
+                <div className="relative z-10 flex flex-1 flex-col px-6 pb-6 pt-3">
+                  <div className="mb-4">
+                    <h3 className="line-clamp-2 text-xl font-extrabold leading-snug tracking-tight text-slate-950 transition-colors duration-300 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-300">
+                      {story.title}
+                    </h3>
+                    <p className="mt-3 line-clamp-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+                      {preview}
+                    </p>
+                  </div>
 
-                <p className="text-sm text-slate-600 mb-6 line-clamp-3 leading-relaxed dark:text-slate-400 flex-1">
-                  {story.content}
-                </p>
-
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-4 mt-auto">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-start gap-3">
-                      <SSProfile name={story.author?.name || "Unknown"} size="h-8 w-8" />
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-slate-900 dark:text-gray-200">
+                  <div className="mt-auto border-t border-slate-200/80 pt-4 dark:border-white/10">
+                    <div className="mb-4 flex items-start gap-3">
+                      <SSProfile name={story.author?.name || "Unknown"} size="h-9 w-9" />
+                      <div className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                           {story.author?.name || "Unknown"}
                         </span>
-                        <span className="text-[10px] text-slate-500 font-medium uppercase tracking-wider dark:text-slate-400">
-                          {formatDate(story.publishedAt || story.createdAt)}
-                        </span>
                         {story.author?.profile?.bio ? (
-                          <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">
+                          <span className="mt-1 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
                             {story.author.profile.bio}
                           </span>
-                        ) : null}
+                        ) : (
+                          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+                            Story creator
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 dark:text-indigo-400 px-2 py-1 rounded-md">
-                      {calculateReadingTime(story.content)} MIN READ
-                    </div>
-                  </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                        <span className="flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-red-500 dark:bg-red-500/10 dark:text-red-300">
+                          <i className="fas fa-heart text-[11px]" /> {story.likesCount || 0}
+                        </span>
+                        <span className="flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-blue-500 dark:bg-blue-500/10 dark:text-blue-300">
+                          <i className="fas fa-comment text-[11px]" /> {story.commentsCount || 0}
+                        </span>
+                        <span className="hidden items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300 sm:flex">
+                          <i className="fas fa-eye text-[11px]" /> {story.viewsCount || 0}
+                        </span>
+                      </div>
 
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-medium">
-                    <div className="flex gap-4">
-                      <span className="flex items-center gap-1.5 hover:text-red-500 transition-colors">
-                        <i className="fas fa-heart text-red-400/80"></i> {story.likesCount || 0}
-                      </span>
-                      <span className="flex items-center gap-1.5 hover:text-blue-500 transition-colors">
-                        <i className="fas fa-comment text-blue-400/80"></i> {story.commentsCount || 0}
+                      <span className="inline-flex shrink-0 items-center gap-2 text-xs font-bold uppercase tracking-wider text-indigo-600 transition-transform duration-300 group-hover:translate-x-1 dark:text-indigo-300">
+                        Read story
+                        <i className="fas fa-arrow-right text-[11px]" />
                       </span>
                     </div>
-                    <span className="flex items-center gap-1.5 hover:text-green-500 transition-colors">
-                      <i className="fas fa-eye text-green-400/80"></i> {story.viewsCount || 0}
-                    </span>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="col-span-full py-16 flex flex-col items-center justify-center text-center">
              <div className="w-24 h-24 mb-6 rounded-full bg-slate-100 flex items-center justify-center dark:bg-slate-800">
