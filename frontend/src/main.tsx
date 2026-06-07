@@ -7,11 +7,8 @@ import { store } from "./redux/store.ts";
 import { ThemeProvider } from "./components/theme/theme.context";
 import "./index.css";
 
-
+// Google OAuth client ID from environment variables
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-
-
 
 if (!GOOGLE_CLIENT_ID) {
   console.warn("VITE_GOOGLE_CLIENT_ID is missing. Google Login will not function.");
