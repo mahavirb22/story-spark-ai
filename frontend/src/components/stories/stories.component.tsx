@@ -61,6 +61,7 @@ const GENRES = [
   { value: "🌟 Adventure", icon: "🌟", name: "Adventure" },
 ] as const;
 
+
 type GenreName = (typeof GENRES)[number]["name"];
 
 const GENRE_LABELS: Record<string, Record<GenreName, string>> = {
@@ -514,6 +515,7 @@ const StoriesComponent = () => {
   const activeGenerationRef = useRef<{ abort: () => void } | null>(null);
   const isGenerationInProgressRef = useRef(false);
   
+  
   const [guestRequestCount, setGuestRequestCount] = useState<number>(() =>
     parseInt(localStorage.getItem("guestRequestCount") || "0", 10)
   );
@@ -524,6 +526,8 @@ const StoriesComponent = () => {
   
   const text = UI_TEXT[selectedLanguage] ?? UI_TEXT.English;
   const genreLabels = GENRE_LABELS[selectedLanguage] ?? GENRE_LABELS.English;
+
+  
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
