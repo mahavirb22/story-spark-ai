@@ -11,7 +11,6 @@ export const subscribe = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Valid email is required." });
     }
 
-    // Extract logged-in user id from JWT token if available
     const userId = (req as any).user?.id;
 
     // Origin of the API request, used to build the unsubscribe link in the email.
