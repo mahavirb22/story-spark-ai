@@ -21,14 +21,14 @@ const razorpay = new Razorpay({
 // POST /api/v1/payment/create-order
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?._id
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
     const { plan } = req.body;
 
-    // Validate plan - reject anything not in the server-side map
+    // Validate plan - reject anything not in the server-side map  
     if (!plan || !PLAN_PRICE_MAP[plan]) {
       return res.status(400).json({
         success: false,
@@ -106,8 +106,8 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
     // 3. Upgrade the user's subscriptionType using the tier stored in the order
     await User.findByIdAndUpdate(order.userId, {
-      subscriptionType: order.plan,
-    });
+  subscriptionType: order.plan,
+});
 
     return res.status(200).json({
       success: true,
