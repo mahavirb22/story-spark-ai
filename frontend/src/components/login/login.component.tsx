@@ -1,19 +1,14 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Link } from "react-router-dom";
-
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import SSInput from "../ui-component/ss-input/ss-input";
 import SSButton from "../ui-component/ss-button/ss-button";
 import { motion } from "framer-motion";
-
 import {
   useLoginUserMutation,
   useGoogleLoginMutation,
 } from "../../redux/apis/auth.api";
-import { storeUserInfo, getUserInfo } from "../../services/auth.service";
-import { USER_ROLE } from "../../constants/role";
-import RedirectComponent from "../redirect.component";
-
+import AuthContext from "../auth.context";
 import toast, { Toaster } from "react-hot-toast";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 
@@ -32,17 +27,21 @@ const LoginComponent = () => {
     formState: { errors },
   } = useForm<Inputs>({ mode: "onChange" });
 
-  const [isBusy, setIsBusy] = useState<boolean>(false);
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const { login } = useContext(AuthContext) ?? { login: () => {} };
+  const [isBusy, setIsBusy] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setIsBusy(true);
     try {
-      const res = await loginUser({ ...data }).unwrap();
+      const res = await loginUser(data).unwrap();
+
       if (res.data.accessToken) {
         toast.success("User logged in successfully!");
-        storeUserInfo({ accessToken: res.data.accessToken });
-        setIsLoggedIn(true);
+        login(res.data.accessToken);
+        const from = location.state?.from || "/dashboard";
+        navigate(from, { replace: true });
       }
     } catch {
       toast.error("Login failed. Please check your credentials.");
@@ -53,16 +52,17 @@ const LoginComponent = () => {
 
   const handleGoogleLoginSuccess = async (credentialResponse: CredentialResponse) => {
     setIsBusy(true);
+
     try {
       const res = await googleLogin({
         token: credentialResponse.credential,
       }).unwrap();
+
       if (res.data.accessToken) {
         toast.success("User logged in successfully with Google!");
-        storeUserInfo({
-          accessToken: res.data.accessToken,
-        });
-        setIsLoggedIn(true);
+        login(res.data.accessToken);
+        const from = location.state?.from || "/dashboard";
+        navigate(from, { replace: true });
       }
     } catch {
       toast.error("Failed to login with Google. Please try again.");
@@ -74,14 +74,6 @@ const LoginComponent = () => {
   const handleGoogleLoginError = () => {
     toast.error("Google login failed. Please try again.");
   };
-
-  if (isLoggedIn) {
-    return (
-      <RedirectComponent
-        defaultPath="/dashboard"
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0B1120] text-slate-900 dark:text-slate-100 flex items-center justify-center relative overflow-hidden p-4 sm:p-8 box-border">
